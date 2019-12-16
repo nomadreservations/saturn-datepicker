@@ -6,18 +6,12 @@
  * found in the LICENSE file at https://angular.io/license
  */
 
-import {Directionality} from '@angular/cdk/bidi';
-import {coerceBooleanProperty} from '@angular/cdk/coercion';
-import {ESCAPE, UP_ARROW} from '@angular/cdk/keycodes';
-import {
-  Overlay,
-  OverlayConfig,
-  OverlayRef,
-  PositionStrategy,
-  ScrollStrategy,
-} from '@angular/cdk/overlay';
-import {ComponentPortal, ComponentType} from '@angular/cdk/portal';
-import {DOCUMENT} from '@angular/common';
+import { Directionality } from '@angular/cdk/bidi';
+import { coerceBooleanProperty } from '@angular/cdk/coercion';
+import { ESCAPE, UP_ARROW } from '@angular/cdk/keycodes';
+import { Overlay, OverlayConfig, OverlayRef, PositionStrategy, ScrollStrategy } from '@angular/cdk/overlay';
+import { ComponentPortal, ComponentType } from '@angular/cdk/portal';
+import { DOCUMENT } from '@angular/common';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -34,30 +28,26 @@ import {
   Output,
   ViewChild,
   ViewContainerRef,
-  ViewEncapsulation,
+  ViewEncapsulation
 } from '@angular/core';
-import {
-  CanColor,
-  CanColorCtor,
-  mixinColor,
-  ThemePalette,
-} from '@angular/material/core';
-import {MatDialog, MatDialogRef} from '@angular/material/dialog';
-import {merge, Subject, Subscription} from 'rxjs';
-import {filter, take} from 'rxjs/operators';
-import {SatCalendar} from './calendar';
-import {matDatepickerAnimations} from './datepicker-animations';
-import {createMissingDateImplError} from './datepicker-errors';
-import {SatCalendarCellCssClasses} from './calendar-body';
-import {SatDatepickerInput, SatDatepickerRangeValue} from './datepicker-input';
-import {DateAdapter} from '../datetime/date-adapter';
+import { CanColor, CanColorCtor, mixinColor, ThemePalette } from '@angular/material/core';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { merge, Subject, Subscription } from 'rxjs';
+import { filter, take } from 'rxjs/operators';
+import { DateAdapter } from '../datetime/date-adapter';
+import { SatCalendar } from './calendar';
+import { SatCalendarCellCssClasses } from './calendar-body';
+import { matDatepickerAnimations } from './datepicker-animations';
+import { createMissingDateImplError } from './datepicker-errors';
+import { SatDatepickerInput, SatDatepickerRangeValue } from './datepicker-input';
 
 /** Used to generate a unique ID for each datepicker instance. */
 let datepickerUid = 0;
 
 /** Injection token that determines the scroll handling while the calendar is open. */
-export const MAT_DATEPICKER_SCROLL_STRATEGY =
-    new InjectionToken<() => ScrollStrategy>('sat-datepicker-scroll-strategy');
+export const MAT_DATEPICKER_SCROLL_STRATEGY = new InjectionToken<() => ScrollStrategy>(
+  'sat-datepicker-scroll-strategy'
+);
 
 /** @docs-private */
 export function MAT_DATEPICKER_SCROLL_STRATEGY_FACTORY(overlay: Overlay): () => ScrollStrategy {
@@ -68,16 +58,17 @@ export function MAT_DATEPICKER_SCROLL_STRATEGY_FACTORY(overlay: Overlay): () => 
 export const MAT_DATEPICKER_SCROLL_STRATEGY_FACTORY_PROVIDER = {
   provide: MAT_DATEPICKER_SCROLL_STRATEGY,
   deps: [Overlay],
-  useFactory: MAT_DATEPICKER_SCROLL_STRATEGY_FACTORY,
+  useFactory: MAT_DATEPICKER_SCROLL_STRATEGY_FACTORY
 };
 
 // Boilerplate for applying mixins to SatDatepickerContent.
 /** @docs-private */
 export class SatDatepickerContentBase {
-  constructor(public _elementRef: ElementRef) { }
+  constructor(public _elementRef: ElementRef) {}
 }
-export const _SatDatepickerContentMixinBase: CanColorCtor & typeof SatDatepickerContentBase =
-    mixinColor(SatDatepickerContentBase);
+export const _SatDatepickerContentMixinBase: CanColorCtor & typeof SatDatepickerContentBase = mixinColor(
+  SatDatepickerContentBase
+);
 
 /**
  * Component used as the content for the datepicker dialog and popup. We use this instead of using
@@ -87,29 +78,23 @@ export const _SatDatepickerContentMixinBase: CanColorCtor & typeof SatDatepicker
  * @docs-private
  */
 @Component({
-  moduleId: module.id,
   selector: 'sat-datepicker-content',
   templateUrl: 'datepicker-content.html',
   styleUrls: ['datepicker-content.css'],
   host: {
-    'class': 'mat-datepicker-content',
+    class: 'mat-datepicker-content',
     '[@transformPanel]': '"enter"',
-    '[class.mat-datepicker-content-touch]': 'datepicker.touchUi',
+    '[class.mat-datepicker-content-touch]': 'datepicker.touchUi'
   },
-  animations: [
-    matDatepickerAnimations.transformPanel,
-    matDatepickerAnimations.fadeInCalendar,
-  ],
+  animations: [matDatepickerAnimations.transformPanel, matDatepickerAnimations.fadeInCalendar],
   exportAs: 'matDatepickerContent',
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  inputs: ['color'],
+  inputs: ['color']
 })
-export class SatDatepickerContent<D> extends _SatDatepickerContentMixinBase
-  implements AfterViewInit, CanColor {
-
+export class SatDatepickerContent<D> extends _SatDatepickerContentMixinBase implements AfterViewInit, CanColor {
   /** Reference to the internal calendar component. */
-  @ViewChild(SatCalendar) _calendar: SatCalendar<D>;
+  @ViewChild(SatCalendar, { static: true }) _calendar: SatCalendar<D>;
 
   /** Reference to the datepicker that created the overlay. */
   datepicker: SatDatepicker<D>;
@@ -132,21 +117,18 @@ export class SatDatepickerContent<D> extends _SatDatepickerContentMixinBase
   }
 }
 
-
 // TODO(mmalerba): We use a component instead of a directive here so the user can use implicit
 // template reference variables (e.g. #d vs #d="matDatepicker"). We can change this to a directive
 // if angular adds support for `exportAs: '$implicit'` on directives.
 /** Component responsible for managing the datepicker popup/dialog. */
 @Component({
-  moduleId: module.id,
   selector: 'sat-datepicker',
   template: '',
   exportAs: 'matDatepicker',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  encapsulation: ViewEncapsulation.None,
+  encapsulation: ViewEncapsulation.None
 })
 export class SatDatepicker<D> implements OnDestroy, CanColor {
-
   /** Whenever datepicker is for selecting range of dates. */
   @Input()
   get rangeMode(): boolean {
@@ -164,7 +146,9 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
 
   /** Start of dates interval. */
   @Input()
-  get beginDate(): D | null { return this._beginDate; }
+  get beginDate(): D | null {
+    return this._beginDate;
+  }
   set beginDate(value: D | null) {
     this._validSelected = null;
     this._beginDate = this._getValidDateOrNull(this._dateAdapter.deserialize(value));
@@ -173,7 +157,9 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
 
   /** End of dates interval. */
   @Input()
-  get endDate(): D | null { return this._endDate; }
+  get endDate(): D | null {
+    return this._endDate;
+  }
   set endDate(value: D | null) {
     this._validSelected = null;
     this._endDate = this._getValidDateOrNull(this._dateAdapter.deserialize(value));
@@ -194,10 +180,14 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
     // If an explicit startAt is set we start there, otherwise we start at whatever the currently
     // selected value is.
     if (this.rangeMode) {
-      return this._startAt || (this._datepickerInput && this._datepickerInput.value ?
-        (<SatDatepickerRangeValue<D>>this._datepickerInput.value).begin : null);
+      return (
+        this._startAt ||
+        (this._datepickerInput && this._datepickerInput.value
+          ? (<SatDatepickerRangeValue<D>>this._datepickerInput.value).begin
+          : null)
+      );
     }
-    return this._startAt || (this._datepickerInput ? <D|null>this._datepickerInput.value : null);
+    return this._startAt || (this._datepickerInput ? <D | null>this._datepickerInput.value : null);
   }
   set startAt(value: D | null) {
     this._startAt = this._getValidDateOrNull(this._dateAdapter.deserialize(value));
@@ -210,8 +200,7 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
   /** Color palette to use on the datepicker's calendar. */
   @Input()
   get color(): ThemePalette {
-    return this._color ||
-        (this._datepickerInput ? this._datepickerInput._getThemePalette() : undefined);
+    return this._color || (this._datepickerInput ? this._datepickerInput._getThemePalette() : undefined);
   }
   set color(value: ThemePalette) {
     this._color = value;
@@ -223,7 +212,9 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
    * than a popup and elements have more padding to allow for bigger touch targets.
    */
   @Input()
-  get touchUi(): boolean { return this._touchUi; }
+  get touchUi(): boolean {
+    return this._touchUi;
+  }
   set touchUi(value: boolean) {
     this._touchUi = coerceBooleanProperty(value);
   }
@@ -232,8 +223,7 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
   /** Whether the datepicker pop-up should be disabled. */
   @Input()
   get disabled(): boolean {
-    return this._disabled === undefined && this._datepickerInput ?
-        this._datepickerInput.disabled : !!this._disabled;
+    return this._disabled === undefined && this._datepickerInput ? this._datepickerInput.disabled : !!this._disabled;
   }
   set disabled(value: boolean) {
     const newValue = coerceBooleanProperty(value);
@@ -282,16 +272,24 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
 
   /** Whether the calendar is open. */
   @Input()
-  get opened(): boolean { return this._opened; }
-  set opened(value: boolean) { value ? this.open() : this.close(); }
+  get opened(): boolean {
+    return this._opened;
+  }
+  set opened(value: boolean) {
+    value ? this.open() : this.close();
+  }
   private _opened = false;
 
   /** The id for the datepicker calendar. */
   id: string = `sat-datepicker-${datepickerUid++}`;
 
   /** The currently selected date. */
-  get _selected(): D | null { return this._validSelected; }
-  set _selected(value: D | null) { this._validSelected = value; }
+  get _selected(): D | null {
+    return this._validSelected;
+  }
+  set _selected(value: D | null) {
+    this._validSelected = value;
+  }
   private _validSelected: D | null = null;
 
   /** The minimum selectable date. */
@@ -333,19 +331,21 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
   readonly _disabledChange = new Subject<boolean>();
 
   /** Emits new selected date when selected date changes. */
-  readonly _selectedChanged = new Subject<SatDatepickerRangeValue<D>|D>();
+  readonly _selectedChanged = new Subject<SatDatepickerRangeValue<D> | D>();
 
   /** The date already selected by the user in range mode. */
   private _beginDateSelected: D | null;
 
-  constructor(private _dialog: MatDialog,
-              private _overlay: Overlay,
-              private _ngZone: NgZone,
-              private _viewContainerRef: ViewContainerRef,
-              @Inject(MAT_DATEPICKER_SCROLL_STRATEGY) scrollStrategy: any,
-              @Optional() private _dateAdapter: DateAdapter<D>,
-              @Optional() private _dir: Directionality,
-              @Optional() @Inject(DOCUMENT) private _document: any) {
+  constructor(
+    private _dialog: MatDialog,
+    private _overlay: Overlay,
+    private _ngZone: NgZone,
+    private _viewContainerRef: ViewContainerRef,
+    @Inject(MAT_DATEPICKER_SCROLL_STRATEGY) scrollStrategy: any,
+    @Optional() private _dateAdapter: DateAdapter<D>,
+    @Optional() private _dir: Directionality,
+    @Optional() @Inject(DOCUMENT) private _document: any
+  ) {
     if (!this._dateAdapter) {
       throw createMissingDateImplError('DateAdapter');
     }
@@ -373,12 +373,13 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
     }
   }
 
-
   /** Selects the given date range */
   _selectRange(dates: SatDatepickerRangeValue<D>): void {
     this._beginDateSelected = null;
-    if (!this._dateAdapter.sameDate(dates.begin, this.beginDate) ||
-      !this._dateAdapter.sameDate(dates.end, this.endDate)) {
+    if (
+      !this._dateAdapter.sameDate(dates.begin, this.beginDate) ||
+      !this._dateAdapter.sameDate(dates.end, this.endDate)
+    ) {
       this._selectedChanged.next(dates);
     }
     this._beginDate = dates.begin;
@@ -403,26 +404,25 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
       throw Error('A SatDatepicker can only be associated with a single input.');
     }
     this._datepickerInput = input;
-    this._inputSubscription =
-        this._datepickerInput._valueChange
-          .subscribe((value: SatDatepickerRangeValue<D> | D | null) => {
-          if (value === null) {
-            this.beginDate = this.endDate = this._selected = null;
-            return;
-          }
-          if (value && value.hasOwnProperty('begin') && value.hasOwnProperty('end')) {
-            value = <SatDatepickerRangeValue<D>>value;
-            if (value.begin && value.end &&
-              this._dateAdapter.compareDate(value.begin, value.end) <= 0) {
-              this.beginDate = value.begin;
-              this.endDate = value.end;
-            } else {
-              this.beginDate = this.endDate = null;
-            }
+    this._inputSubscription = this._datepickerInput._valueChange.subscribe(
+      (value: SatDatepickerRangeValue<D> | D | null) => {
+        if (value === null) {
+          this.beginDate = this.endDate = this._selected = null;
+          return;
+        }
+        if (value && value.hasOwnProperty('begin') && value.hasOwnProperty('end')) {
+          value = <SatDatepickerRangeValue<D>>value;
+          if (value.begin && value.end && this._dateAdapter.compareDate(value.begin, value.end) <= 0) {
+            this.beginDate = value.begin;
+            this.endDate = value.end;
           } else {
-            this._selected = <D>value;
+            this.beginDate = this.endDate = null;
           }
-        });
+        } else {
+          this._selected = <D>value;
+        }
+      }
+    );
   }
 
   /** Open the calendar. */
@@ -457,8 +457,8 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
     if (this._calendarPortal && this._calendarPortal.isAttached) {
       this._calendarPortal.detach();
     }
-    if (this._beginDateSelected && this.selectFirstDateOnClose ) {
-      this._selectRange({begin: this._beginDateSelected, end: this._beginDateSelected});
+    if (this._beginDateSelected && this.selectFirstDateOnClose) {
+      this._selectRange({ begin: this._beginDateSelected, end: this._beginDateSelected });
     }
 
     const completeClose = () => {
@@ -471,8 +471,7 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
       }
     };
 
-    if (this._focusedElementBeforeOpen &&
-      typeof this._focusedElementBeforeOpen.focus === 'function') {
+    if (this._focusedElementBeforeOpen && typeof this._focusedElementBeforeOpen.focus === 'function') {
       // Because IE moves focus asynchronously, we can't count on it being restored before we've
       // marked the datepicker as closed. If the event fires out of sequence and the element that
       // we're refocusing opens the datepicker on focus, the user could be stuck with not being
@@ -502,7 +501,7 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
     this._dialogRef = this._dialog.open<SatDatepickerContent<D>>(SatDatepickerContent, {
       direction: this._dir ? this._dir.value : 'ltr',
       viewContainerRef: this._viewContainerRef,
-      panelClass: 'mat-datepicker-dialog',
+      panelClass: 'mat-datepicker-dialog'
     });
 
     this._dialogRef.afterClosed().subscribe(() => this.close());
@@ -513,8 +512,7 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
   /** Open the calendar as a popup. */
   private _openAsPopup(): void {
     if (!this._calendarPortal) {
-      this._calendarPortal = new ComponentPortal<SatDatepickerContent<D>>(SatDatepickerContent,
-                                                                          this._viewContainerRef);
+      this._calendarPortal = new ComponentPortal<SatDatepickerContent<D>>(SatDatepickerContent, this._viewContainerRef);
     }
 
     if (!this._popupRef) {
@@ -527,9 +525,12 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
       this._setColor();
 
       // Update the position once the calendar has rendered.
-      this._ngZone.onStable.asObservable().pipe(take(1)).subscribe(() => {
-        this._popupRef.updatePosition();
-      });
+      this._ngZone.onStable
+        .asObservable()
+        .pipe(take(1))
+        .subscribe(() => {
+          this._popupRef.updatePosition();
+        });
     }
   }
 
@@ -541,7 +542,7 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
       backdropClass: 'mat-overlay-transparent-backdrop',
       direction: this._dir,
       scrollStrategy: this._scrollStrategy(),
-      panelClass: 'mat-datepicker-popup',
+      panelClass: 'mat-datepicker-popup'
     });
 
     this._popupRef = this._overlay.create(overlayConfig);
@@ -550,17 +551,19 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
     merge(
       this._popupRef.backdropClick(),
       this._popupRef.detachments(),
-      this._popupRef.keydownEvents().pipe(filter(event => {
-        // Closing on alt + up is only valid when there's an input associated with the datepicker.
-        return event.keyCode === ESCAPE ||
-               (this._datepickerInput && event.altKey && event.keyCode === UP_ARROW);
-      }))
+      this._popupRef.keydownEvents().pipe(
+        filter(event => {
+          // Closing on alt + up is only valid when there's an input associated with the datepicker.
+          return event.keyCode === ESCAPE || (this._datepickerInput && event.altKey && event.keyCode === UP_ARROW);
+        })
+      )
     ).subscribe(() => this.close());
   }
 
   /** Create the popup PositionStrategy. */
   private _createPopupPositionStrategy(): PositionStrategy {
-    return this._overlay.position()
+    return this._overlay
+      .position()
       .flexibleConnectedTo(this._datepickerInput.getConnectedOverlayOrigin())
       .withTransformOriginOn('.mat-datepicker-content')
       .withFlexibleDimensions(false)
@@ -599,7 +602,7 @@ export class SatDatepicker<D> implements OnDestroy, CanColor {
    * @returns The given object if it is both a date instance and valid, otherwise null.
    */
   private _getValidDateOrNull(obj: any): D | null {
-    return (this._dateAdapter.isDateInstance(obj) && this._dateAdapter.isValid(obj)) ? obj : null;
+    return this._dateAdapter.isDateInstance(obj) && this._dateAdapter.isValid(obj) ? obj : null;
   }
 
   /** Passes the current theme color along to the calendar overlay. */

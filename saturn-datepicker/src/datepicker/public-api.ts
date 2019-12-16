@@ -6,13 +6,14 @@
  * found in the LICENSE file at https://angular.io/license
  */
 
-export * from './datepicker-module';
 export * from './calendar';
 export * from './calendar-body';
 export * from './datepicker';
 export * from './datepicker-animations';
 export * from './datepicker-input';
 export * from './datepicker-intl';
+export * from './datepicker-module';
 export * from './datepicker-toggle';
 export * from './month-view';
+export { SatMultiYearView, yearsPerPage, yearsPerRow } from './multi-year-view';
 export * from './year-view';

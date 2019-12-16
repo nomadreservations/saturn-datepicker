@@ -6,6 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 
+import { Directionality } from '@angular/cdk/bidi';
 import {
   DOWN_ARROW,
   END,
@@ -15,8 +16,8 @@ import {
   PAGE_DOWN,
   PAGE_UP,
   RIGHT_ARROW,
-  UP_ARROW,
   SPACE,
+  UP_ARROW
 } from '@angular/cdk/keycodes';
 import {
   AfterContentInit,
@@ -28,25 +29,21 @@ import {
   Input,
   Optional,
   Output,
-  ViewEncapsulation,
   ViewChild,
+  ViewEncapsulation
 } from '@angular/core';
-import {DateAdapter} from '../datetime/date-adapter';
-import {MAT_DATE_FORMATS, MatDateFormats} from '../datetime/date-formats';
-import {Directionality} from '@angular/cdk/bidi';
-import {SatCalendarBody, SatCalendarCell, SatCalendarCellCssClasses} from './calendar-body';
-import {createMissingDateImplError} from './datepicker-errors';
-
+import { DateAdapter } from '../datetime/date-adapter';
+import { MatDateFormats, MAT_DATE_FORMATS } from '../datetime/date-formats';
+import { SatCalendarBody, SatCalendarCell, SatCalendarCellCssClasses } from './calendar-body';
+import { createMissingDateImplError } from './datepicker-errors';
 
 const DAYS_PER_WEEK = 7;
-
 
 /**
  * An internal component used to display a single month in the datepicker.
  * @docs-private
  */
 @Component({
-  moduleId: module.id,
   selector: 'sat-month-view',
   templateUrl: 'month-view.html',
   exportAs: 'matMonthView',
@@ -54,10 +51,11 @@ const DAYS_PER_WEEK = 7;
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SatMonthView<D> implements AfterContentInit {
-
   /** Current start of interval. */
   @Input()
-  get beginDate(): D | null { return this._beginDate; }
+  get beginDate(): D | null {
+    return this._beginDate;
+  }
   set beginDate(value: D | null) {
     this._beginDate = this._getValidDateOrNull(this._dateAdapter.deserialize(value));
     this.updateRangeSpecificValues();
@@ -66,7 +64,9 @@ export class SatMonthView<D> implements AfterContentInit {
 
   /** Current end of interval. */
   @Input()
-  get endDate(): D | null { return this._endDate; }
+  get endDate(): D | null {
+    return this._endDate;
+  }
   set endDate(value: D | null) {
     this._endDate = this._getValidDateOrNull(this._dateAdapter.deserialize(value));
     this.updateRangeSpecificValues();
@@ -89,7 +89,9 @@ export class SatMonthView<D> implements AfterContentInit {
   _rangeFull: boolean | null = false;
 
   /** Whenever user already selected start of dates interval. */
-  @Input() set beginDateSelected(value: D | null) { this._beginDateSelected = value } ;
+  @Input() set beginDateSelected(value: D | null) {
+    this._beginDateSelected = value;
+  }
 
   /** Whenever user already selected start of dates interval. An inner property that avoid asynchronous problems */
   _beginDateSelected: D | null;
@@ -98,11 +100,12 @@ export class SatMonthView<D> implements AfterContentInit {
    * The date to display in this month view (everything other than the month and year is ignored).
    */
   @Input()
-  get activeDate(): D { return this._activeDate; }
+  get activeDate(): D {
+    return this._activeDate;
+  }
   set activeDate(value: D) {
     const oldActiveDate = this._activeDate;
-    const validDate =
-        this._getValidDateOrNull(this._dateAdapter.deserialize(value)) || this._dateAdapter.today();
+    const validDate = this._getValidDateOrNull(this._dateAdapter.deserialize(value)) || this._dateAdapter.today();
     this._activeDate = this._dateAdapter.clampDate(validDate, this.minDate, this.maxDate);
     if (!this._hasSameMonthAndYear(oldActiveDate, this._activeDate)) {
       this._init();
@@ -112,7 +115,9 @@ export class SatMonthView<D> implements AfterContentInit {
 
   /** The currently selected date. */
   @Input()
-  get selected(): D | null { return this._selected; }
+  get selected(): D | null {
+    return this._selected;
+  }
   set selected(value: D | null) {
     this._selected = this._getValidDateOrNull(this._dateAdapter.deserialize(value));
     this._selectedDate = this._getDateInCurrentMonth(this._selected);
@@ -121,7 +126,9 @@ export class SatMonthView<D> implements AfterContentInit {
 
   /** The minimum selectable date. */
   @Input()
-  get minDate(): D | null { return this._minDate; }
+  get minDate(): D | null {
+    return this._minDate;
+  }
   set minDate(value: D | null) {
     this._minDate = this._getValidDateOrNull(this._dateAdapter.deserialize(value));
   }
@@ -129,7 +136,9 @@ export class SatMonthView<D> implements AfterContentInit {
 
   /** The maximum selectable date. */
   @Input()
-  get maxDate(): D | null { return this._maxDate; }
+  get maxDate(): D | null {
+    return this._maxDate;
+  }
   set maxDate(value: D | null) {
     this._maxDate = this._getValidDateOrNull(this._dateAdapter.deserialize(value));
   }
@@ -151,7 +160,7 @@ export class SatMonthView<D> implements AfterContentInit {
   @Output() readonly activeDateChange: EventEmitter<D> = new EventEmitter<D>();
 
   /** The body of calendar table */
-  @ViewChild(SatCalendarBody) _matCalendarBody: SatCalendarBody;
+  @ViewChild(SatCalendarBody, { static: false }) _matCalendarBody: SatCalendarBody;
 
   /** The label for this month (e.g. "January 2017"). */
   _monthLabel: string;
@@ -172,28 +181,20 @@ export class SatMonthView<D> implements AfterContentInit {
   _todayDate: number | null;
 
   /** The names of the weekdays. */
-  _weekdays: {long: string, narrow: string}[];
+  _weekdays: { long: string; narrow: string }[];
 
-  constructor(private _changeDetectorRef: ChangeDetectorRef,
-              @Optional() @Inject(MAT_DATE_FORMATS) private _dateFormats: MatDateFormats,
-              @Optional() public _dateAdapter: DateAdapter<D>,
-              @Optional() private _dir?: Directionality) {
+  constructor(
+    private _changeDetectorRef: ChangeDetectorRef,
+    @Optional() @Inject(MAT_DATE_FORMATS) private _dateFormats: MatDateFormats,
+    @Optional() public _dateAdapter: DateAdapter<D>,
+    @Optional() private _dir?: Directionality
+  ) {
     if (!this._dateAdapter) {
       throw createMissingDateImplError('DateAdapter');
     }
     if (!this._dateFormats) {
       throw createMissingDateImplError('MAT_DATE_FORMATS');
     }
-
-    const firstDayOfWeek = this._dateAdapter.getFirstDayOfWeek();
-    const narrowWeekdays = this._dateAdapter.getDayOfWeekNames('narrow');
-    const longWeekdays = this._dateAdapter.getDayOfWeekNames('long');
-
-    // Rotate the labels for days of the week based on the configured first day of the week.
-    let weekdays = longWeekdays.map((long, i) => {
-      return {long, narrow: narrowWeekdays[i]};
-    });
-    this._weekdays = weekdays.slice(firstDayOfWeek).concat(weekdays.slice(0, firstDayOfWeek));
 
     this._activeDate = this._dateAdapter.today();
   }
@@ -204,13 +205,12 @@ export class SatMonthView<D> implements AfterContentInit {
 
   /** Handles when a new date is selected. */
   _dateSelected(date: number) {
-
     if (this.rangeMode) {
-
       const selectedYear = this._dateAdapter.getYear(this.activeDate);
       const selectedMonth = this._dateAdapter.getMonth(this.activeDate);
       const selectedDate = this._dateAdapter.createDate(selectedYear, selectedMonth, date);
-      if (!this._beginDateSelected) { // At first click emit the same start and end of interval
+      if (!this._beginDateSelected) {
+        // At first click emit the same start and end of interval
         this._beginDateSelected = selectedDate;
         this.selectedChange.emit(selectedDate);
       } else {
@@ -222,7 +222,6 @@ export class SatMonthView<D> implements AfterContentInit {
       this.activeDate = selectedDate;
       this._focusActiveCell();
     } else if (this._selectedDate != date) {
-
       const selectedYear = this._dateAdapter.getYear(this.activeDate);
       const selectedMonth = this._dateAdapter.getMonth(this.activeDate);
       const selectedDate = this._dateAdapter.createDate(selectedYear, selectedMonth, date);
@@ -256,23 +255,26 @@ export class SatMonthView<D> implements AfterContentInit {
         this.activeDate = this._dateAdapter.addCalendarDays(this._activeDate, 7);
         break;
       case HOME:
-        this.activeDate = this._dateAdapter.addCalendarDays(this._activeDate,
-            1 - this._dateAdapter.getDate(this._activeDate));
+        this.activeDate = this._dateAdapter.addCalendarDays(
+          this._activeDate,
+          1 - this._dateAdapter.getDate(this._activeDate)
+        );
         break;
       case END:
-        this.activeDate = this._dateAdapter.addCalendarDays(this._activeDate,
-            (this._dateAdapter.getNumDaysInMonth(this._activeDate) -
-              this._dateAdapter.getDate(this._activeDate)));
+        this.activeDate = this._dateAdapter.addCalendarDays(
+          this._activeDate,
+          this._dateAdapter.getNumDaysInMonth(this._activeDate) - this._dateAdapter.getDate(this._activeDate)
+        );
         break;
       case PAGE_UP:
-        this.activeDate = event.altKey ?
-            this._dateAdapter.addCalendarYears(this._activeDate, -1) :
-            this._dateAdapter.addCalendarMonths(this._activeDate, -1);
+        this.activeDate = event.altKey
+          ? this._dateAdapter.addCalendarYears(this._activeDate, -1)
+          : this._dateAdapter.addCalendarMonths(this._activeDate, -1);
         break;
       case PAGE_DOWN:
-        this.activeDate = event.altKey ?
-            this._dateAdapter.addCalendarYears(this._activeDate, 1) :
-            this._dateAdapter.addCalendarMonths(this._activeDate, 1);
+        this.activeDate = event.altKey
+          ? this._dateAdapter.addCalendarYears(this._activeDate, 1)
+          : this._dateAdapter.addCalendarMonths(this._activeDate, 1);
         break;
       case ENTER:
       case SPACE:
@@ -307,16 +309,20 @@ export class SatMonthView<D> implements AfterContentInit {
     this.updateRangeSpecificValues();
     this._selectedDate = this._getDateInCurrentMonth(this.selected);
     this._todayDate = this._getDateInCurrentMonth(this._dateAdapter.today());
-    this._monthLabel =
-        this._dateAdapter.getMonthNames('short')[this._dateAdapter.getMonth(this.activeDate)]
-            .toLocaleUpperCase();
+    this._monthLabel = this._dateAdapter
+      .getMonthNames('short')
+      [this._dateAdapter.getMonth(this.activeDate)].toLocaleUpperCase();
 
-    let firstOfMonth = this._dateAdapter.createDate(this._dateAdapter.getYear(this.activeDate),
-        this._dateAdapter.getMonth(this.activeDate), 1);
+    let firstOfMonth = this._dateAdapter.createDate(
+      this._dateAdapter.getYear(this.activeDate),
+      this._dateAdapter.getMonth(this.activeDate),
+      1
+    );
     this._firstWeekOffset =
-        (DAYS_PER_WEEK + this._dateAdapter.getDayOfWeek(firstOfMonth) -
-         this._dateAdapter.getFirstDayOfWeek()) % DAYS_PER_WEEK;
+      (DAYS_PER_WEEK + this._dateAdapter.getDayOfWeek(firstOfMonth) - this._dateAdapter.getFirstDayOfWeek()) %
+      DAYS_PER_WEEK;
 
+    this._initWeekdays();
     this._createWeekCells();
     this._changeDetectorRef.markForCheck();
   }
@@ -324,6 +330,19 @@ export class SatMonthView<D> implements AfterContentInit {
   /** Focuses the active cell after the microtask queue is empty. */
   _focusActiveCell() {
     this._matCalendarBody._focusActiveCell();
+  }
+
+  /** Initializes the weekdays. */
+  private _initWeekdays() {
+    const firstDayOfWeek = this._dateAdapter.getFirstDayOfWeek();
+    const narrowWeekdays = this._dateAdapter.getDayOfWeekNames('narrow');
+    const longWeekdays = this._dateAdapter.getDayOfWeekNames('long');
+
+    // Rotate the labels for days of the week based on the configured first day of the week.
+    let weekdays = longWeekdays.map((long, i) => {
+      return { long, narrow: narrowWeekdays[i] };
+    });
+    this._weekdays = weekdays.slice(firstDayOfWeek).concat(weekdays.slice(0, firstDayOfWeek));
   }
 
   /** Creates SatCalendarCells for the dates in this month. */
@@ -337,23 +356,28 @@ export class SatMonthView<D> implements AfterContentInit {
         cell = 0;
       }
       const date = this._dateAdapter.createDate(
-            this._dateAdapter.getYear(this.activeDate),
-            this._dateAdapter.getMonth(this.activeDate), i + 1);
+        this._dateAdapter.getYear(this.activeDate),
+        this._dateAdapter.getMonth(this.activeDate),
+        i + 1
+      );
       const enabled = this._shouldEnableDate(date);
       const ariaLabel = this._dateAdapter.format(date, this._dateFormats.display.dateA11yLabel);
       const cellClasses = this.dateClass ? this.dateClass(date) : undefined;
 
-      this._weeks[this._weeks.length - 1]
-          .push(new SatCalendarCell(i + 1, dateNames[i], ariaLabel, enabled, cellClasses));
+      this._weeks[this._weeks.length - 1].push(
+        new SatCalendarCell(i + 1, dateNames[i], ariaLabel, enabled, cellClasses)
+      );
     }
   }
 
   /** Date filter for the month */
   private _shouldEnableDate(date: D): boolean {
-    return !!date &&
-        (!this.dateFilter || this.dateFilter(date)) &&
-        (!this.minDate || this._dateAdapter.compareDate(date, this.minDate) >= 0) &&
-        (!this.maxDate || this._dateAdapter.compareDate(date, this.maxDate) <= 0);
+    return (
+      !!date &&
+      (!this.dateFilter || this.dateFilter(date)) &&
+      (!this.minDate || this._dateAdapter.compareDate(date, this.minDate) >= 0) &&
+      (!this.maxDate || this._dateAdapter.compareDate(date, this.maxDate) <= 0)
+    );
   }
 
   /**
@@ -361,14 +385,17 @@ export class SatMonthView<D> implements AfterContentInit {
    * Returns null if the given Date is in another month.
    */
   private _getDateInCurrentMonth(date: D | null): number | null {
-    return date && this._hasSameMonthAndYear(date, this.activeDate) ?
-        this._dateAdapter.getDate(date) : null;
+    return date && this._hasSameMonthAndYear(date, this.activeDate) ? this._dateAdapter.getDate(date) : null;
   }
 
   /** Checks whether the 2 dates are non-null and fall within the same month of the same year. */
   private _hasSameMonthAndYear(d1: D | null, d2: D | null): boolean {
-    return !!(d1 && d2 && this._dateAdapter.getMonth(d1) == this._dateAdapter.getMonth(d2) &&
-              this._dateAdapter.getYear(d1) == this._dateAdapter.getYear(d2));
+    return !!(
+      d1 &&
+      d2 &&
+      this._dateAdapter.getMonth(d1) == this._dateAdapter.getMonth(d2) &&
+      this._dateAdapter.getYear(d1) == this._dateAdapter.getYear(d2)
+    );
   }
 
   /**
@@ -376,7 +403,7 @@ export class SatMonthView<D> implements AfterContentInit {
    * @returns The given object if it is both a date instance and valid, otherwise null.
    */
   private _getValidDateOrNull(obj: any): D | null {
-    return (this._dateAdapter.isDateInstance(obj) && this._dateAdapter.isValid(obj)) ? obj : null;
+    return this._dateAdapter.isDateInstance(obj) && this._dateAdapter.isValid(obj) ? obj : null;
   }
 
   /** Determines whether the user has the RTL layout direction. */
@@ -390,7 +417,10 @@ export class SatMonthView<D> implements AfterContentInit {
     if (this.rangeMode) {
       this._beginDateNumber = this._getDateInCurrentMonth(this._beginDate);
       this._endDateNumber = this._getDateInCurrentMonth(this._endDate);
-      this._rangeFull = this.beginDate && this.endDate && !this._beginDateNumber &&
+      this._rangeFull =
+        this.beginDate &&
+        this.endDate &&
+        !this._beginDateNumber &&
         !this._endDateNumber &&
         this._dateAdapter.compareDate(this.beginDate, this.activeDate) <= 0 &&
         this._dateAdapter.compareDate(this.activeDate, this.endDate) <= 0;
