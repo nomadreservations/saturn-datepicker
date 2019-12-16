@@ -120,7 +120,6 @@ export class SatDatepickerInput<D> implements ControlValueAccessor, OnDestroy, V
       this.dateChange.emit(new SatDatepickerInputEvent(this, this._elementRef.nativeElement));
     });
   }
-  _datepicker: SatDatepicker<D>;
 
   /** Function that can be used to filter out dates within the datepicker. */
   @Input()
@@ -128,7 +127,6 @@ export class SatDatepickerInput<D> implements ControlValueAccessor, OnDestroy, V
     this._dateFilter = value;
     this._validatorOnChange();
   }
-  _dateFilter: (date: SatDatepickerRangeValue<D> | D | null) => boolean;
 
   /** The value of the input. */
   @Input()
@@ -136,6 +134,7 @@ export class SatDatepickerInput<D> implements ControlValueAccessor, OnDestroy, V
     return this._value;
   }
   set value(value:  SatDatepickerRangeValue<D> | D | null) {
+    const formatValue = this._dateFormats.display.dateInput === 'l' ? 'L' : this._dateFormats.display.dateInput;
     if (value && value.hasOwnProperty('begin') && value.hasOwnProperty('end')) {
       /** Range mode */
       const rangeValue = <SatDatepickerRangeValue<D>>value;
@@ -145,12 +144,12 @@ export class SatDatepickerInput<D> implements ControlValueAccessor, OnDestroy, V
           this._dateAdapter.isValid(rangeValue.begin) && this._dateAdapter.isValid(rangeValue.end);
       rangeValue.begin = this._getValidDateOrNull(rangeValue.begin);
       rangeValue.end = this._getValidDateOrNull(rangeValue.end);
-      let oldDate = <SatDatepickerRangeValue<D> | null>this.value;
+      const oldDate = <SatDatepickerRangeValue<D> | null>this.value;
       this._elementRef.nativeElement.value =
           rangeValue && rangeValue.begin && rangeValue.end
-              ? this._dateAdapter.format(rangeValue.begin, this._dateFormats.display.dateInput) +
+              ? this._dateAdapter.format(rangeValue.begin, formatValue) +
                 ' - ' +
-                this._dateAdapter.format(rangeValue.end, this._dateFormats.display.dateInput)
+                this._dateAdapter.format(rangeValue.end, formatValue)
               : '';
       if (oldDate == null && rangeValue != null || oldDate != null && rangeValue == null ||
           !this._dateAdapter.sameDate((<SatDatepickerRangeValue<D>>oldDate).begin,
@@ -170,16 +169,15 @@ export class SatDatepickerInput<D> implements ControlValueAccessor, OnDestroy, V
       value = this._dateAdapter.deserialize(value);
       this._lastValueValid = !value || this._dateAdapter.isValid(value);
       value = this._getValidDateOrNull(value);
-      let oldDate = this.value;
+      const oldDate = this.value;
       this._value = value;
       this._elementRef.nativeElement.value =
-          value ? this._dateAdapter.format(value, this._dateFormats.display.dateInput) : '';
+          value ? this._dateAdapter.format(value, formatValue) : '';
       if (!this._dateAdapter.sameDate(<D>oldDate, value)) {
         this._valueChange.emit(value);
       }
     }
   }
-  private _value: SatDatepickerRangeValue<D> | D | null;
 
   /** The minimum valid date. */
   @Input()
@@ -188,7 +186,6 @@ export class SatDatepickerInput<D> implements ControlValueAccessor, OnDestroy, V
     this._min = this._getValidDateOrNull(this._dateAdapter.deserialize(value));
     this._validatorOnChange();
   }
-  private _min: D | null;
 
   /** The maximum valid date. */
   @Input()
@@ -197,7 +194,6 @@ export class SatDatepickerInput<D> implements ControlValueAccessor, OnDestroy, V
     this._max = this._getValidDateOrNull(this._dateAdapter.deserialize(value));
     this._validatorOnChange();
   }
-  private _max: D | null;
 
   /** Whether the datepicker-input is disabled. */
   @Input()
@@ -219,6 +215,11 @@ export class SatDatepickerInput<D> implements ControlValueAccessor, OnDestroy, V
       element.blur();
     }
   }
+  _datepicker: SatDatepicker<D>;
+  _dateFilter: (date: SatDatepickerRangeValue<D> | D | null) => boolean;
+  private _value: SatDatepickerRangeValue<D> | D | null;
+  private _min: D | null;
+  private _max: D | null;
   private _disabled: boolean;
 
   /** Emits when a `change` event is fired on this `<input>`. */
@@ -235,15 +236,15 @@ export class SatDatepickerInput<D> implements ControlValueAccessor, OnDestroy, V
   /** Emits when the disabled state has changed */
   _disabledChange = new EventEmitter<boolean>();
 
+  private _datepickerSubscription = Subscription.EMPTY;
+
+  private _localeSubscription = Subscription.EMPTY;
+
   _onTouched = () => {};
 
   private _cvaOnChange: (value: any) => void = () => {};
 
   private _validatorOnChange = () => {};
-
-  private _datepickerSubscription = Subscription.EMPTY;
-
-  private _localeSubscription = Subscription.EMPTY;
 
   /** The form control validator for whether the input parses. */
   private _parseValidator: ValidatorFn = (): ValidationErrors | null => {
@@ -324,12 +325,14 @@ export class SatDatepickerInput<D> implements ControlValueAccessor, OnDestroy, V
   }
 
   /** The combined form control validator for this input. */
+  // tslint:disable-next-line: member-ordering
   private _validator: ValidatorFn | null =
-      Validators.compose(
-          [this._parseValidator, this._minValidator, this._maxValidator,
-            this._filterValidator, this._rangeValidator]);
+    Validators.compose(
+        [this._parseValidator, this._minValidator, this._maxValidator,
+          this._filterValidator, this._rangeValidator]);
 
   /** Whether the last value set on the input was valid. */
+  // tslint:disable-next-line: member-ordering
   private _lastValueValid = false;
 
   constructor(
@@ -413,6 +416,7 @@ export class SatDatepickerInput<D> implements ControlValueAccessor, OnDestroy, V
   }
 
   _onInput(value: string) {
+    const formatValue = this._dateFormats.display.dateInput === 'l' ? 'L' : this._dateFormats.display.dateInput;
     let date: SatDatepickerRangeValue<D>|D|null = null;
     if (this._datepicker.rangeMode) {
       const parts = value.split('-');
@@ -420,9 +424,8 @@ export class SatDatepickerInput<D> implements ControlValueAccessor, OnDestroy, V
           const position = Math.floor(parts.length / 2);
           const beginDateString = parts.slice(0, position).join('-');
           const endDateString = parts.slice(position).join('-');
-          let beginDate = this._dateAdapter.parse(beginDateString,
-              this._dateFormats.parse.dateInput);
-          let endDate = this._dateAdapter.parse(endDateString, this._dateFormats.parse.dateInput);
+          let beginDate = this._dateAdapter.parse(beginDateString, formatValue);
+          let endDate = this._dateAdapter.parse(endDateString, formatValue);
           this._lastValueValid = !beginDate || !endDate || this._dateAdapter.isValid(beginDate) &&
                                                            this._dateAdapter.isValid(endDate);
           beginDate = this._getValidDateOrNull(beginDate);
@@ -432,7 +435,7 @@ export class SatDatepickerInput<D> implements ControlValueAccessor, OnDestroy, V
           }
       }
     } else {
-      date = this._dateAdapter.parse(value, this._dateFormats.parse.dateInput);
+      date = this._dateAdapter.parse(value, formatValue);
       this._lastValueValid = !date || this._dateAdapter.isValid(date);
       date = this._getValidDateOrNull(date);
     }
@@ -463,19 +466,19 @@ export class SatDatepickerInput<D> implements ControlValueAccessor, OnDestroy, V
 
   /** Formats a value and sets it on the input element. */
   private _formatValue(value: SatDatepickerRangeValue<D> | D | null) {
+    const formatValue = this._dateFormats.display.dateInput === 'l' ? 'L' : this._dateFormats.display.dateInput;
       if (value && value.hasOwnProperty('begin') && value.hasOwnProperty('end')) {
           value = value as SatDatepickerRangeValue<D>;
           this._elementRef.nativeElement.value =
               value && value.begin && value.end
-                  ? this._dateAdapter.format(value.begin, this._dateFormats.display.dateInput) +
+                  ? this._dateAdapter.format(value.begin, formatValue) +
                   ' - ' +
-                  this._dateAdapter.format(value.end, this._dateFormats.display.dateInput)
+                  this._dateAdapter.format(value.end, formatValue)
                   : ''
-      }
-      else {
+      } else {
             value = value as D | null
           this._elementRef.nativeElement.value =
-              value ? this._dateAdapter.format(value, this._dateFormats.display.dateInput) : '';
+              value ? this._dateAdapter.format(value, formatValue) : '';
       }
   }
 

@@ -12,49 +12,50 @@ import {
   ElementRef,
   EventEmitter,
   Input,
-  Output,
-  ViewEncapsulation,
   NgZone,
   OnChanges,
+  Output,
   SimpleChanges,
+  ViewEncapsulation
 } from '@angular/core';
-import {take} from 'rxjs/operators';
+import { take } from 'rxjs/operators';
 
 /**
  * Extra CSS classes that can be associated with a calendar cell.
  */
-export type SatCalendarCellCssClasses = string | string[] | Set<string> | {[key: string]: any};
+export type SatCalendarCellCssClasses = string | string[] | Set<string> | { [key: string]: any };
 
 /**
  * An internal class that represents the data corresponding to a single calendar cell.
  * @docs-private
  */
 export class SatCalendarCell {
-  constructor(public value: number,
-              public displayValue: string,
-              public ariaLabel: string,
-              public enabled: boolean,
-              public cssClasses?: SatCalendarCellCssClasses) {}
+  constructor(
+    public value: number,
+    public displayValue: string,
+    public ariaLabel: string,
+    public enabled: boolean,
+    public cssClasses?: SatCalendarCellCssClasses
+  ) {}
 }
-
 
 /**
  * An internal component used to display calendar data in a table.
  * @docs-private
  */
 @Component({
-  moduleId: module.id,
+  // tslint:disable-next-line: component-selector
   selector: '[sat-calendar-body]',
   templateUrl: 'calendar-body.html',
   styleUrls: ['calendar-body.css'],
   host: {
-    'class': 'mat-calendar-body',
-    'role': 'grid',
+    class: 'mat-calendar-body',
+    role: 'grid',
     'aria-readonly': 'true'
   },
   exportAs: 'matCalendarBody',
   encapsulation: ViewEncapsulation.None,
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SatCalendarBody implements OnChanges {
   /** The label for the table. (e.g. "Jan 2017"). */
@@ -72,12 +73,12 @@ export class SatCalendarBody implements OnChanges {
   /** The value in the table since range of dates started.
    * Null means no interval or interval doesn't start in this month
    */
-  @Input() begin: number|null;
+  @Input() begin: number | null;
 
   /** The value in the table representing end of dates range.
    * Null means no interval or interval doesn't end in this month
    */
-  @Input() end: number|null;
+  @Input() end: number | null;
 
   /** Whenever user already selected start of dates interval. */
   @Input() beginSelected: boolean;
@@ -121,7 +122,7 @@ export class SatCalendarBody implements OnChanges {
   /** The cell number of the hovered cell */
   _cellOver: number;
 
-  constructor(private _elementRef: ElementRef<HTMLElement>, private _ngZone: NgZone) { }
+  constructor(private _elementRef: ElementRef<HTMLElement>, private _ngZone: NgZone) {}
 
   _cellClicked(cell: SatCalendarCell): void {
     if (cell.enabled) {
@@ -135,14 +136,14 @@ export class SatCalendarBody implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     const columnChanges = changes['numCols'];
-    const {rows, numCols} = this;
+    const { rows, numCols } = this;
 
     if (changes['rows'] || columnChanges) {
       this._firstRowOffset = rows && rows.length && rows[0].length ? numCols - rows[0].length : 0;
     }
 
     if (changes['cellAspectRatio'] || columnChanges || !this._cellPadding) {
-      this._cellPadding = `${50 * this.cellAspectRatio / numCols}%`;
+      this._cellPadding = `${(50 * this.cellAspectRatio) / numCols}%`;
     }
 
     if (columnChanges || !this._cellWidth) {
@@ -209,8 +210,10 @@ export class SatCalendarBody implements OnChanges {
       if (this.isBeforeSelected && !this.begin) {
         return this._cellOver === date;
       } else {
-        return (this.begin === date && !(this._cellOver < this.begin)) ||
+        return (
+          (this.begin === date && !(this._cellOver < this.begin)) ||
           (this._cellOver === date && this._cellOver < this.begin)
+        );
       }
     }
     return this.begin === date;
@@ -222,8 +225,10 @@ export class SatCalendarBody implements OnChanges {
       if (this.isBeforeSelected && !this.begin) {
         return false;
       } else {
-        return (this.end === date && !(this._cellOver > this.begin)) ||
+        return (
+          (this.end === date && !(this._cellOver > this.begin)) ||
           (this._cellOver === date && this._cellOver > this.begin)
+        );
       }
     }
     return this.end === date;
@@ -232,14 +237,18 @@ export class SatCalendarBody implements OnChanges {
   /** Focuses the active cell after the microtask queue is empty. */
   _focusActiveCell() {
     this._ngZone.runOutsideAngular(() => {
-      this._ngZone.onStable.asObservable().pipe(take(1)).subscribe(() => {
-        const activeCell: HTMLElement | null =
-            this._elementRef.nativeElement.querySelector('.mat-calendar-body-active');
+      this._ngZone.onStable
+        .asObservable()
+        .pipe(take(1))
+        .subscribe(() => {
+          const activeCell: HTMLElement | null = this._elementRef.nativeElement.querySelector(
+            '.mat-calendar-body-active'
+          );
 
-        if (activeCell) {
-          activeCell.focus();
-        }
-      });
+          if (activeCell) {
+            activeCell.focus();
+          }
+        });
     });
   }
 

@@ -135,7 +135,7 @@ Licence: MIT
 A little note for myself
 ```shell
 npm run build:lib
-cp saturn-datepicker/src/bundle.css saturn-datepicker/src/_theming.scss dist
+cp saturn-datepicker/src/bundle.css saturn-datepicker/src/theming.scss dist
 (cd dist ; npm pack)
 (cd dist ; npm publish)
 ```
